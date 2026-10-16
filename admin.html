@@ -22,8 +22,8 @@
 <button id="saveProgram">Program mentése</button> <button id="clearForm" type="button">Űrlap ürítése</button><p id="programStatus" class="small"></p><h3>Meglévő programok</h3><div id="programList"></div>
 </section></div></main>
 <script>
-const SUPABASE_URL="IDE_MASOLD_A_SUPABASE_PROJECT_URL_CIMET";
-const SUPABASE_KEY="IDE_MASOLD_A_SUPABASE_PUBLISHABLE_VAGY_ANON_KULCSOT";
+const SUPABASE_URL="https://cxcexrtuecceeqgigoaf.supabase.co";
+const SUPABASE_KEY="sb_publishable_Dh4JNnbdvIIn_g4P04oEJA_Hnslu9t1";
 const DAYS=["Hétfő","Kedd","Szerda","Csütörtök","Péntek","Szombat","Vasárnap"];
 const ready=SUPABASE_URL.startsWith("https://")&&!SUPABASE_URL.includes("IDE_MASOLD")&&!SUPABASE_KEY.includes("IDE_MASOLD");
 const db=ready?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
