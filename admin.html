@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="hu">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Elite Swans — Vezetői felület</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--p:#8064b5;--dark:#38294f;--bg:#f5f0fc;--line:#e5dcf2}*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:var(--dark)}header{padding:25px 15px;text-align:center;background:linear-gradient(135deg,#70529f,#a38bd0);color:white}main{max-width:1000px;margin:22px auto;padding:0 14px 40px}.panel{background:white;padding:20px;border-radius:16px;margin-bottom:18px;box-shadow:0 5px 18px #5c447c12}input,select,textarea,button{font:inherit;padding:11px;border-radius:9px}input,select,textarea{width:100%;border:1px solid #d9cce9;margin:5px 0 12px}textarea{min-height:75px}button{border:0;background:var(--p);color:white;font-weight:bold;cursor:pointer}button:disabled{opacity:.6}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.small{font-size:14px;color:#766887;line-height:1.5}.item{border-bottom:1px solid var(--line);padding:12px 0;line-height:1.5}.item:last-child{border:0}.danger{background:#9d4b62}.hidden{display:none}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}@media(max-width:600px){.row{grid-template-columns:1fr}}
+</style></head><body>
+<header><h1>🦢 Elite Swans — Vezetői felület</h1><p>Belépés szükséges</p></header><main>
+<section id="login" class="panel"><h2>Vezetői belépés</h2><p class="small">Csak az előre engedélyezett vezetői fiókok használhatják ezt az oldalt.</p>
+<label>E-mail-cím</label><input id="email" type="email" autocomplete="username" placeholder="vezető e-mail-címe">
+<label>Jelszó</label><input id="password" type="password" autocomplete="current-password" placeholder="Jelszó">
+<button id="loginBtn">Belépés</button><p id="loginStatus" class="small" role="status"></p></section>
+<div id="app" class="hidden">
+<section class="panel"><div class="row"><div><h2>Vezetői vezérlőpult</h2><p id="who" class="small"></p></div><div style="text-align:right"><button id="logoutBtn">Kijelentkezés</button></div></div>
+<div class="tabs"><button id="showResponses">Elérhetőségek</button><button id="showPrograms">Programok kezelése</button></div></section>
+<section id="responsesPanel" class="panel"><h2>👥 Ki mikor ér rá?</h2><label>Hét</label><select id="responseWeek"><option value="A">A hét</option><option value="B">B hét</option></select><div id="responses"></div></section>
+<section id="programPanel" class="panel hidden"><h2>✍️ Program hozzáadása / módosítása</h2>
+<input id="editId" type="hidden"><div class="row"><div><label>Hét</label><select id="pWeek"><option value="A">A hét</option><option value="B">B hét</option></select></div><div><label>Nap</label><select id="pDay"><option>Hétfő</option><option>Kedd</option><option>Szerda</option><option>Csütörtök</option><option>Péntek</option><option>Szombat</option><option>Vasárnap</option></select></div></div>
+<label>Program neve</label><input id="pTitle" maxlength="150" placeholder="Pl. Edzés">
+<label>Időpont</label><input id="pTime" maxlength="80" placeholder="Pl. 17:00">
+<label>Leírás / helyszín</label><textarea id="pDescription" maxlength="2000" placeholder="Találkozó helye, részletek…"></textarea>
+<button id="saveProgram">Program mentése</button> <button id="clearForm" type="button">Űrlap ürítése</button><p id="programStatus" class="small"></p><h3>Meglévő programok</h3><div id="programList"></div>
+</section></div></main>
+<script>
+const SUPABASE_URL="IDE_MASOLD_A_SUPABASE_PROJECT_URL_CIMET";
+const SUPABASE_KEY="IDE_MASOLD_A_SUPABASE_PUBLISHABLE_VAGY_ANON_KULCSOT";
+const DAYS=["Hétfő","Kedd","Szerda","Csütörtök","Péntek","Szombat","Vasárnap"];
+const ready=SUPABASE_URL.startsWith("https://")&&!SUPABASE_URL.includes("IDE_MASOLD")&&!SUPABASE_KEY.includes("IDE_MASOLD");
+const db=ready?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
+const $=id=>document.getElementById(id);
+function msg(id,s){$(id).textContent=s;}
+function escapeText(s){return String(s??"");}
+async function checkSession(){
+ if(!db){msg("loginStatus","Előbb állítsd be a Supabase URL-t és a publikus kulcsot a kódban.");return;}
+ const {data:{session}}=await db.auth.getSession();
+ if(session){const {data:admin}=await db.rpc("is_calendar_admin");if(admin){$("login").classList.add("hidden");$("app").classList.remove("hidden");msg("who",session.user.email);await loadResponses();await loadPrograms();}else{await db.auth.signOut();msg("loginStatus","Ez a fiók nincs vezetőként engedélyezve.");}}
+}
+$("loginBtn").onclick=async()=>{if(!db){msg("loginStatus","Előbb állítsd be a Supabase URL-t és a publikus kulcsot.");return;}msg("loginStatus","Belépés…");const {error}=await db.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});if(error){msg("loginStatus","Nem sikerült belépni. Ellenőrizd az adatokat és a vezetői jogosultságot.");return;}await checkSession();};
+$("logoutBtn").onclick=async()=>{await db.auth.signOut();location.reload();};
+$("showResponses").onclick=()=>{$("responsesPanel").classList.remove("hidden");$("programPanel").classList.add("hidden");};
+$("showPrograms").onclick=()=>{$("responsesPanel").classList.add("hidden");$("programPanel").classList.remove("hidden");};
+$("responseWeek").onchange=loadResponses;
+async function loadResponses(){
+ if(!db)return;const out=$("responses");out.textContent="Betöltés…";
+ const {data,error}=await db.from("availability").select("id,week,day,name,created_at").eq("week",$("responseWeek").value).order("day").order("name");
+ if(error){out.textContent="Nem sikerült betölteni az elérhetőségeket. Ellenőrizd, hogy ez a fiók vezetőként engedélyezett-e.";return;}
+ out.replaceChildren();if(!data.length){out.textContent="Erre a hétre még nem érkezett válasz.";return;}
+ DAYS.forEach(day=>{const entries=data.filter(x=>x.day===day);if(!entries.length)return;const div=document.createElement("div");div.className="item";const strong=document.createElement("strong");strong.textContent=day+" ("+entries.length+")";div.append(strong);const names=document.createElement("div");names.textContent=entries.map(x=>x.name).join(", ");div.append(names);out.append(div);});
+}
+function clearForm(){["editId","pTitle","pTime","pDescription"].forEach(id=>$(id).value="");msg("programStatus","");}
+$("clearForm").onclick=clearForm;
+$("saveProgram").onclick=async()=>{
+ const id=$("editId").value;const row={week:$("pWeek").value,day:$("pDay").value,title:$("pTitle").value.trim(),time_text:$("pTime").value.trim(),description:$("pDescription").value.trim()};
+ if(!row.title){msg("programStatus","Add meg a program nevét.");return;}
+ const result=id?await db.from("programs").update(row).eq("id",id):await db.from("programs").insert(row);
+ if(result.error){msg("programStatus","Nem sikerült menteni. Ellenőrizd a vezetői jogosultságot.");return;}
+ msg("programStatus","A program mentése sikerült.");clearForm();await loadPrograms();
+};
+async function loadPrograms(){
+ if(!db)return;const out=$("programList");out.textContent="Betöltés…";
+ const {data,error}=await db.from("programs").select("*").order("week").order("day");
+ if(error){out.textContent="Nem sikerült betölteni a programokat.";return;}out.replaceChildren();
+ if(!data.length){out.textContent="Még nincs program.";return;}
+ data.forEach(p=>{const div=document.createElement("div");div.className="item";const strong=document.createElement("strong");strong.textContent=p.week+" hét · "+p.day+" — "+p.title;const info=document.createElement("div");info.className="small";info.textContent=[p.time_text,p.description].filter(Boolean).join(" · ");const edit=document.createElement("button");edit.textContent="Szerkesztés";edit.style.marginRight="8px";edit.onclick=()=>{$("editId").value=p.id;$("pWeek").value=p.week;$("pDay").value=p.day;$("pTitle").value=p.title;$("pTime").value=p.time_text||"";$("pDescription").value=p.description||"";window.scrollTo({top:$("programPanel").offsetTop,behavior:"smooth"});};const del=document.createElement("button");del.textContent="Törlés";del.className="danger";del.onclick=async()=>{if(!confirm("Biztosan törlöd ezt a programot?"))return;const {error}=await db.from("programs").delete().eq("id",p.id);if(error){alert("Nem sikerült törölni.");return;}await loadPrograms();};div.append(strong,info,edit,del);out.append(div);});
+}
+checkSession();
+</script></body></html>

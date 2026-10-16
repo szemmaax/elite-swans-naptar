@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Elite Swans naptár</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--p:#8064b5;--dark:#38294f;--bg:#f5f0fc;--line:#e5dcf2}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#fbf9ff,#eee6fa);font-family:Arial,sans-serif;color:var(--dark)}
+header{padding:32px 16px;text-align:center;background:linear-gradient(135deg,#70529f,#a38bd0);color:white}
+header h1{margin:0 0 8px}header p{margin:0}.wrap{max-width:1000px;margin:24px auto;padding:0 15px 40px}
+.panel{background:white;padding:20px;border-radius:18px;margin-bottom:18px;box-shadow:0 5px 18px #5c447c12}
+h2{margin-top:0}input,select,button{font:inherit;border-radius:10px;padding:11px}input,select{width:100%;border:1px solid #d9cce9;margin:6px 0 14px}
+button{border:0;background:var(--p);color:white;font-weight:bold;cursor:pointer}.weeks{display:flex;gap:10px;margin-bottom:16px}.weeks button{flex:1}.weeks .active{background:var(--dark)}
+.days{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.day{border:1px solid var(--line);border-radius:13px;padding:13px;background:#fcfaff}.day label{display:flex;gap:10px;align-items:flex-start;cursor:pointer}.day input{width:auto;margin:4px 0}.day strong{display:block}.program{font-size:13px;line-height:1.5;margin-top:9px;color:#655478;white-space:pre-wrap;overflow-wrap:anywhere}
+.hint{color:#766887;font-size:14px;line-height:1.5}.status{margin-top:12px;font-size:14px}
+@media(min-width:700px){.days{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:420px){.days{grid-template-columns:1fr}}
+</style></head>
+<body>
+<header><h1>🦢 Elite Swans naptár</h1><p>Programok és elérhetőségek</p></header>
+<main class="wrap">
+<section class="panel"><h2>💜 Elérhetőség jelzése</h2>
+<p class="hint">Írd be a neved, válaszd ki a hetet, majd jelöld be azokat a napokat, amikor ráérsz. A válaszaidat a vezetők látják; más tagokét nem tudod megtekinteni.</p>
+<label for="name">Neved</label><input id="name" maxlength="50" placeholder="Pl. Anna">
+<div class="weeks"><button id="btnA" class="active" type="button">A hét</button><button id="btnB" type="button">B hét</button></div>
+<div id="days" class="days"></div>
+<button id="send" type="button">Elérhetőség elküldése</button><div id="status" class="status" role="status"></div>
+</section>
+<section class="panel"><h2>📅 Programok</h2><p class="hint">Itt láthatod a vezetők által hozzáadott programokat.</p><div class="weeks"><button id="progA" class="active" type="button">A hét</button><button id="progB" type="button">B hét</button></div><div id="programs"></div></section>
+</main>
+<script>
+const SUPABASE_URL = "cxcexrtuecceeqgigoaf";
+const SUPABASE_KEY = "sb_publishable_Dh4JNnbdvIIn_g4P04oEJA_Hnslu9t1";
+const DAYS = ["Hétfő","Kedd","Szerda","Csütörtök","Péntek","Szombat","Vasárnap"];
+const ready = SUPABASE_URL.startsWith("https://") && !SUPABASE_URL.includes("IDE_MASOLD") && !SUPABASE_KEY.includes("IDE_MASOLD");
+const db = ready ? window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY) : null;
+let week="A", programWeek="A";
+const $=id=>document.getElementById(id);
+function setWeek(w){week=w;$("btnA").classList.toggle("active",w==="A");$("btnB").classList.toggle("active",w==="B");renderDays();}
+function renderDays(){
+ $("days").innerHTML="";
+ DAYS.forEach(day=>{const box=document.createElement("div");box.className="day";const label=document.createElement("label");const cb=document.createElement("input");cb.type="checkbox";cb.value=day;const text=document.createElement("span");const strong=document.createElement("strong");strong.textContent=day;text.append(strong);label.append(cb,text);box.append(label);$("days").append(box);});
+}
+function setProgramWeek(w){programWeek=w;$("progA").classList.toggle("active",w==="A");$("progB").classList.toggle("active",w==="B");loadPrograms();}
+async function loadPrograms(){
+ const out=$("programs");out.replaceChildren();
+ if(!db){out.textContent="Előbb állítsd be a Supabase URL-t és a publikus kulcsot a kódban.";return;}
+ const {data,error}=await db.from("programs").select("week,day,title,time_text,description").eq("week",programWeek);
+ if(error){out.textContent="Nem sikerült betölteni a programokat. Ellenőrizd a Supabase-beállításokat.";return;}
+ const rows=(data||[]).sort((a,b)=>DAYS.indexOf(a.day)-DAYS.indexOf(b.day));
+ if(!rows.length){out.textContent="Erre a hétre még nincs program.";return;}
+ rows.forEach(p=>{const card=document.createElement("div");card.className="day";const title=document.createElement("strong");title.textContent=p.day+" — "+p.title;const details=document.createElement("div");details.className="program";details.textContent=[p.time_text,p.description].filter(Boolean).join("\n");card.append(title,details);card.style.marginBottom="10px";out.append(card);});
+}
+$("btnA").onclick=()=>setWeek("A");$("btnB").onclick=()=>setWeek("B");
+$("progA").onclick=()=>setProgramWeek("A");$("progB").onclick=()=>setProgramWeek("B");
+$("send").onclick=async()=>{
+ const name=$("name").value.trim();const selected=[...$("days").querySelectorAll("input:checked")].map(x=>x.value);
+ const status=$("status");status.textContent="";
+ if(!db){status.textContent="Előbb állítsd be a Supabase URL-t és a publikus kulcsot a kódban.";return;}
+ if(!name){status.textContent="Kérlek, írd be a neved.";return;}
+ if(!selected.length){status.textContent="Jelölj be legalább egy napot.";return;}
+ $("send").disabled=true;$("send").textContent="Küldés…";
+ const rows=selected.map(day=>({week,day,name}));
+ const {error}=await db.from("availability").insert(rows);
+ $("send").disabled=false;$("send").textContent="Elérhetőség elküldése";
+ if(error){status.textContent="Nem sikerült elküldeni. Próbáld újra, vagy jelezd a weboldal vezetőjének.";return;}
+ status.textContent="Köszönjük! Az elérhetőségedet elküldtük a vezetőknek.";
+ $("days").querySelectorAll("input").forEach(x=>x.checked=false);
+};
+renderDays();loadPrograms();
+</script></body></html>
