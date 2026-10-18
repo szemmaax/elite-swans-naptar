@@ -30,23 +30,66 @@ const db=ready?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
 const $=id=>document.getElementById(id);
 function msg(id,s){$(id).textContent=s;}
 function escapeText(s){return String(s??"");}
+
+// Törlő függvény az elérhetőségekhez
+async function deleteAvailability(id) {
+  if (!confirm("Biztosan törölni szeretnéd ezt a bejegyzést?")) return;
+  const { error } = await db.from("availability").delete().eq("id", id);
+  if (error) {
+    alert("Hiba történt a törlés során: " + error.message);
+  } else {
+    await loadResponses();
+  }
+}
+
 async function checkSession(){
  if(!db){msg("loginStatus","Előbb állítsd be a Supabase URL-t és a publikus kulcsot a kódban.");return;}
  const {data:{session}}=await db.auth.getSession();
  if(session){const {data:admin}=await db.rpc("is_calendar_admin");if(admin){$("login").classList.add("hidden");$("app").classList.remove("hidden");msg("who",session.user.email);await loadResponses();await loadPrograms();}else{await db.auth.signOut();msg("loginStatus","Ez a fiók nincs vezetőként engedélyezve.");}}
 }
+
 $("loginBtn").onclick=async()=>{if(!db){msg("loginStatus","Előbb állítsd be a Supabase URL-t és a publikus kulcsot.");return;}msg("loginStatus","Belépés…");const {error}=await db.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});if(error){msg("loginStatus","Nem sikerült belépni. Ellenőrizd az adatokat és a vezetői jogosultságot.");return;}await checkSession();};
 $("logoutBtn").onclick=async()=>{await db.auth.signOut();location.reload();};
 $("showResponses").onclick=()=>{$("responsesPanel").classList.remove("hidden");$("programPanel").classList.add("hidden");};
 $("showPrograms").onclick=()=>{$("responsesPanel").classList.add("hidden");$("programPanel").classList.remove("hidden");};
 $("responseWeek").onchange=loadResponses;
+
 async function loadResponses(){
  if(!db)return;const out=$("responses");out.textContent="Betöltés…";
  const {data,error}=await db.from("availability").select("id,week,day,name,created_at").eq("week",$("responseWeek").value).order("day").order("name");
  if(error){out.textContent="Nem sikerült betölteni az elérhetőségeket. Ellenőrizd, hogy ez a fiók vezetőként engedélyezett-e.";return;}
  out.replaceChildren();if(!data.length){out.textContent="Erre a hétre még nem érkezett válasz.";return;}
- DAYS.forEach(day=>{const entries=data.filter(x=>x.day===day);if(!entries.length)return;const div=document.createElement("div");div.className="item";const strong=document.createElement("strong");strong.textContent=day+" ("+entries.length+")";div.append(strong);const names=document.createElement("div");names.textContent=entries.map(x=>x.name).join(", ");div.append(names);out.append(div);});
+ 
+ DAYS.forEach(day=>{
+   const entries=data.filter(x=>x.day===day);
+   if(!entries.length)return;
+   const div=document.createElement("div");div.className="item";
+   const strong=document.createElement("strong");strong.textContent=day+" ("+entries.length+")";
+   div.append(strong);
+   
+   const namesDiv=document.createElement("div");
+   namesDiv.style.marginTop="6px";
+   
+   entries.forEach(item=>{
+     const span=document.createElement("span");
+     span.style.cssText="display:inline-flex;align-items:center;background:#f0f0f0;padding:3px 8px;border-radius:6px;margin:2px 4px 2px 0;font-size:14px;";
+     span.textContent=item.name;
+     
+     const delBtn=document.createElement("button");
+     delBtn.textContent="✕";
+     delBtn.style.cssText="border:none;background:transparent;color:#e53e3e;font-weight:bold;margin-left:6px;cursor:pointer;padding:0;";
+     delBtn.title="Törlés";
+     delBtn.onclick=()=>deleteAvailability(item.id);
+     
+     span.append(delBtn);
+     namesDiv.append(span);
+   });
+   
+   div.append(namesDiv);
+   out.append(div);
+ });
 }
+
 function clearForm(){["editId","pTitle","pTime","pDescription"].forEach(id=>$(id).value="");msg("programStatus","");}
 $("clearForm").onclick=clearForm;
 $("saveProgram").onclick=async()=>{
@@ -56,6 +99,7 @@ $("saveProgram").onclick=async()=>{
  if(result.error){msg("programStatus","Nem sikerült menteni. Ellenőrizd a vezetői jogosultságot.");return;}
  msg("programStatus","A program mentése sikerült.");clearForm();await loadPrograms();
 };
+
 async function loadPrograms(){
  if(!db)return;const out=$("programList");out.textContent="Betöltés…";
  const {data,error}=await db.from("programs").select("*").order("week").order("day");
