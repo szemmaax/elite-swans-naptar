@@ -6,10 +6,11 @@
 :root{--p:#d6689d;--dark:#38294f;--bg:#F5B8EB;--line:#f5d0e8}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:var(--dark)}
 
-/* Teljes kép alapú fejléc */
-header{padding:0;text-align:center;background:transparent;position:relative;}
-.header-bg-img{width:100%;max-height:280px;object-fit:cover;display:block;}
-.header-content{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:white;text-shadow:0 2px 4px rgba(0,0,0,0.7);width:100%;padding:0 15px;}
+/* Fejléc és kép igazítása, hogy ne csússzon el */
+header{padding:20px 10px;text-align:center;background:transparent;}
+.header-img{max-width:120px;height:auto;border-radius:50%;margin-bottom:10px;display:inline-block;box-shadow:0 4px 10px rgba(0,0,0,0.15);}
+header h1 { margin: 5px 0; color: #38294f; font-size: 26px; }
+header p { margin: 0; color: #5a476d; }
 
 main{max-width:800px;margin:22px auto;padding:0 14px 40px}
 .panel{background:white;padding:20px;border-radius:16px;margin-bottom:18px;box-shadow:0 5px 18px #d6689d22}
@@ -21,19 +22,16 @@ button{border:0;background:var(--p);color:white;font-weight:bold;cursor:pointer}
 .item{border-bottom:1px solid var(--line);padding:14px 0;line-height:1.6}.item:last-child{border:0}
 .tabs{display:flex;gap:8px;margin-bottom:15px}
 
-/* Program info elemek egymás alatt */
 .program-detail { display: block; font-size: 14px; color: #66526f; margin-top: 4px; }
 
 @media(max-width:600px){.row{grid-template-columns:1fr}}
 </style></head><body>
 
 <header>
-    <!-- Itt a fejléc maga a feltöltött képed lesz háttérként vagy fő képként. Írd be a képfájlod nevét a src-be! -->
-    <img src="banner.jpg" alt="Elite Swans Háttér" class="header-bg-img">
-    <div class="header-content">
-        <h1>🦢 Elite Swans naptár</h1>
-        <p>Programok és elérhetőségek</p>
-    </div>
+    <!-- IDE ÍRD BE A SAJÁT KÉPFÁJLOD NEVÉT A kep-neve.png HELYÉRE -->
+    <img src="banner.jpg" alt="Elite Swans Logo" class="header-img">
+    <h1>🦢 Elite Swans naptár</h1>
+    <p>Programok és elérhetőségek</p>
 </header>
 
 <main>
@@ -65,7 +63,7 @@ button{border:0;background:var(--p);color:white;font-weight:bold;cursor:pointer}
 
 <script>
 const SUPABASE_URL="https://cxcexrtuecceeqgigoaf.supabase.co";
-const SUPABASE_KEY="sb_publishable_Dh4JNnbdvIn_g4P04oEJA_Hnslu9t1";
+const SUPABASE_KEY="sb_publishable_Dh4JNnbdvIIn_g4P04oEJA_Hnslu9t1";
 const DAYS=["Hétfő","Kedd","Szerda","Csütörtök","Péntek","Szombat","Vasárnap"];
 const ready=SUPABASE_URL.startsWith("https://")&&!SUPABASE_URL.includes("IDE_MASOLD")&&!SUPABASE_KEY.includes("IDE_MASOLD");
 const db=ready?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
@@ -119,7 +117,6 @@ async function loadPrograms(){
     strong.textContent=p.day+" — "+p.title;
     div.append(strong);
     
-    // Program adatok egymás alatt külön sorokban
     if(p.time_text){
       const timeDiv=document.createElement("div");
       timeDiv.className="program-detail";
