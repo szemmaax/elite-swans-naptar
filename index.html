@@ -4,11 +4,11 @@
 <title>Elite Swans — Naptár</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--p:#d6689d;--dark:#38294f;--bg:#F5B8EB;--line:#f5d0e8}
-*{box-sizing:border-box}body{margin:0;background:var%(bg);font-family:Arial,sans-serif;color:var(--dark)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:var(--dark)}
 
-/* Teljes szélességű fejléc kép */
-header{padding:0;text-align:center;background:#38294f;}
-.header-full-img{width:100%;max-height:260px;object-fit:cover;display:block;}
+/* Fejléc kép beállítás: nem vágja le, hanem teljes egészében mutatja */
+header{padding:0;text-align:center;background:#38294f;overflow:hidden;}
+.header-full-img{width:100%;height:auto;max-height:none;object-fit:contain;display:block;}
 
 main{max-width:800px;margin:22px auto;padding:0 14px 40px}
 .panel{background:white;padding:20px;border-radius:16px;margin-bottom:18px;box-shadow:0 5px 18px #d6689d22}
@@ -26,8 +26,8 @@ button{border:0;background:var(--p);color:white;font-weight:bold;cursor:pointer}
 </style></head><body>
 
 <header>
-    <!-- Itt a kép már teljes szélességben fog megjelenni a kis kör helyett -->
-    <img src="banner.jpg" alt="Elite Swans Háttér" class="header-full-img">
+    <!-- Cseréld ki a kep-neve.png-t a saját képfájlod nevére -->
+    <img src="kep-neve.png" alt="Elite Swans Háttér" class="header-full-img">
 </header>
 
 <main>
@@ -121,14 +121,22 @@ async function loadPrograms(){
     }
     
     if(p.description){
-      // Szétválasztjuk a leírást vesszők vagy pontosvesszők / kulcsszavak mentén, hogy minden külön sorban legyen
       const parts = p.description.split(/[,;]|\s+(?=Szett:|Ló:|Találkozó:)/i);
       parts.forEach(part => {
         const trimmed = part.trim();
         if(trimmed){
           const descDiv=document.createElement("div");
           descDiv.className="program-detail";
-          descDiv.textContent="📍, :shopping_bags: , :horse: " + trimmed;
+          
+          // Emojik hozzáadása a megfelelő kulcsszavakhoz
+          if(trimmed.toLowerCase().startsWith("szett")) {
+            descDiv.textContent="🛍️ " + trimmed;
+          } else if(trimmed.toLowerCase().startsWith("ló")) {
+            descDiv.textContent="🐴 " + trimmed;
+          } else {
+            descDiv.textContent="📍 " + trimmed;
+          }
+          
           div.append(descDiv);
         }
       });
