@@ -3,56 +3,31 @@
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Elite Swans — Naptár</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--p:#d6689d;--dark:#38294f;--line:#f5d0e8}
-*{box-sizing:border-box}
+:root{--p:#d6689d;--dark:#38294f;--bg:#F5B8EB;--line:#f5d0e8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:var(--dark)}
 
-/* Itt állítjuk be a képet az EGÉSZ weboldal hátterének */
-body{
-    margin:0;
-    /* Cseréld ki a kep-neve.png-t a saját képfájlod nevére! */
-    background-image: url('banner.jpg');
-    background-size: cover; /* Kitölti a képernyőt */
-    background-attachment: fixed; /* A háttér a helyén marad görgetés közben is */
-    background-position: center;
-    background-color: #F5B8EB;
-    font-family: Arial, sans-serif;
-    color: var(--dark);
-}
-
-/* A fejlécet most üressé tesszük vagy elrejtjük, mivel a háttérkép mutatja a címet */
-header{
-    padding: 30px 10px;
-    text-align: center;
-    background: transparent;
-}
+/* Fejléc kép beállítás: nem vágja le, hanem teljes egészében mutatja */
+header{padding:0;text-align:center;background:#38294f;overflow:hidden;}
+.header-full-img{width:100%;height:auto;max-height:none;object-fit:contain;display:block;}
 
 main{max-width:800px;margin:22px auto;padding:0 14px 40px}
-
-/* A fehér panelokat áttetszőbbé tesszük, hogy látszódjon mögöttük a háttérkép */
-.panel{
-    background: rgba(255, 255, 255, 0.92); 
-    padding:20px;
-    border-radius:16px;
-    margin-bottom:18px;
-    box-shadow:0 5px 18px rgba(214, 104, 157, 0.3);
-    color: var(--dark);
-}
-
+.panel{background:white;padding:20px;border-radius:16px;margin-bottom:18px;box-shadow:0 5px 18px #d6689d22}
 input,select,textarea,button{font:inherit;padding:11px;border-radius:9px}
-input,select{width:100%;border:1px solid #f2b6dc;margin:5px 0 12px; background: rgba(255,255,255,0.9);}
+input,select{width:100%;border:1px solid #f2b6dc;margin:5px 0 12px}
 button{border:0;background:var(--p);color:white;font-weight:bold;cursor:pointer}button:disabled{opacity:.6}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.small{font-size:14px;color:#6b537a;line-height:1.5}
+.small{font-size:14px;color:#766887;line-height:1.5}
 .item{border-bottom:1px solid var(--line);padding:14px 0;line-height:1.6}.item:last-child{border:0}
 .tabs{display:flex;gap:8px;margin-bottom:15px}
 
-.program-detail { display: block; font-size: 14px; color: #5a4267; margin-top: 4px; }
+.program-detail { display: block; font-size: 14px; color: #66526f; margin-top: 4px; }
 
 @media(max-width:600px){.row{grid-template-columns:1fr}}
 </style></head><body>
 
 <header>
-    <!-- Mivel a képeden már rajta van a felirat, itt nem kell duplázni -->
+    <!-- Cseréld ki a kep-neve.png-t a saját képfájlod nevére -->
+    <img src="banner.jpg" alt="Elite Swans Háttér" class="header-full-img">
 </header>
 
 <main>
@@ -103,7 +78,7 @@ $("pBtnB").onclick=()=>{pWeek="B";$("pBtnB").style.background="#d6689d";$("pBtnA
 function renderDays(){
   const c=$("daysContainer");c.replaceChildren();
   DAYS.forEach(d=>{
-    const l=document.createElement("label");l.style.cssText="display:flex;align-items:center;gap:8px;padding:10px;background:rgba(255,245,252,0.9);border:1px solid #f2b6dc;border-radius:8px;cursor:pointer;";
+    const l=document.createElement("label");l.style.cssText="display:flex;align-items:center;gap:8px;padding:10px;background:#fff5fc;border:1px solid #f2b6dc;border-radius:8px;cursor:pointer;";
     const cb=document.createElement("input");cb.type="checkbox";cb.style.width="auto";cb.style.margin="0";cb.checked=!!selectedDays[currentWeek]?.[d];
     cb.onchange=()=>{if(!selectedDays[currentWeek])selectedDays[currentWeek]={};selectedDays[currentWeek][d]=cb.checked;};
     l.append(cb,document.createTextNode(d));c.append(l);
@@ -153,4 +128,22 @@ async function loadPrograms(){
           const descDiv=document.createElement("div");
           descDiv.className="program-detail";
           
-          if(trimmed.toLowerCase
+          // Emojik hozzáadása a megfelelő kulcsszavakhoz
+          if(trimmed.toLowerCase().startsWith("szett")) {
+            descDiv.textContent="🛍️ " + trimmed;
+          } else if(trimmed.toLowerCase().startsWith("ló")) {
+            descDiv.textContent="🐴 " + trimmed;
+          } else {
+            descDiv.textContent="📍 " + trimmed;
+          }
+          
+          div.append(descDiv);
+        }
+      });
+    }
+    
+    out.append(div);
+  });
+}
+loadPrograms();
+</script></body></html>
