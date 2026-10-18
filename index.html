@@ -1,71 +1,101 @@
 <!doctype html>
 <html lang="hu">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Elite Swans naptár</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Elite Swans — Naptár</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--p:#8064b5;--dark:#38294f;--bg:#f5f0fc;--line:#e5dcf2}
-*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#fbf9ff,#eee6fa);font-family:Arial,sans-serif;color:var(--dark)}
-header{padding:32px 16px;text-align:center;background:linear-gradient(135deg,#70529f,#a38bd0);color:white}
-header h1{margin:0 0 8px}header p{margin:0}.wrap{max-width:1000px;margin:24px auto;padding:0 15px 40px}
-.panel{background:white;padding:20px;border-radius:18px;margin-bottom:18px;box-shadow:0 5px 18px #5c447c12}
-h2{margin-top:0}input,select,button{font:inherit;border-radius:10px;padding:11px}input,select{width:100%;border:1px solid #d9cce9;margin:6px 0 14px}
-button{border:0;background:var(--p);color:white;font-weight:bold;cursor:pointer}.weeks{display:flex;gap:10px;margin-bottom:16px}.weeks button{flex:1}.weeks .active{background:var(--dark)}
-.days{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.day{border:1px solid var(--line);border-radius:13px;padding:13px;background:#fcfaff}.day label{display:flex;gap:10px;align-items:flex-start;cursor:pointer}.day input{width:auto;margin:4px 0}.day strong{display:block}.program{font-size:13px;line-height:1.5;margin-top:9px;color:#655478;white-space:pre-wrap;overflow-wrap:anywhere}
-.hint{color:#766887;font-size:14px;line-height:1.5}.status{margin-top:12px;font-size:14px}
-@media(min-width:700px){.days{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:420px){.days{grid-template-columns:1fr}}
-</style></head>
-<body>
-<header><h1>🦢 Elite Swans naptár</h1><p>Programok és elérhetőségek</p></header>
-<main class="wrap">
-<section class="panel"><h2>💜 Elérhetőség jelzése</h2>
-<p class="hint">Írd be a neved, válaszd ki a hetet, majd jelöld be azokat a napokat, amikor ráérsz. A válaszaidat a vezetők látják; más tagokét nem tudod megtekinteni.</p>
-<label for="name">Neved</label><input id="name" maxlength="50" placeholder="Pl. Anna">
-<div class="weeks"><button id="btnA" class="active" type="button">A hét</button><button id="btnB" type="button">B hét</button></div>
-<div id="days" class="days"></div>
-<button id="send" type="button">Elérhetőség elküldése</button><div id="status" class="status" role="status"></div>
-</section>
-<section class="panel"><h2>📅 Programok</h2><p class="hint">Itt láthatod a vezetők által hozzáadott programokat.</p><div class="weeks"><button id="progA" class="active" type="button">A hét</button><button id="progB" type="button">B hét</button></div><div id="programs"></div></section>
-</main>
+/* Itt állítottuk át a hátteret a kért rózsaszínre (#F5B8EB) */
+:root{--p:#8064b5;--dark:#38294f;--bg:#F5B8EB;--line:#e5dcf2}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:var(--dark)}
+header{padding:25px 15px;text-align:center;background:linear-gradient(135deg,#70529f,#a38bd0);color:white}
+/* Stílus a felső sávba szánt képhez */
+.header-img { max-width: 80px; height: auto; border-radius: 50%; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; }
+main{max-width:800px;margin:22px auto;padding:0 14px 40px}
+.panel{background:white;padding:20px;border-radius:16px;margin-bottom:18px;box-shadow:0 5px 18px #5c447c12}
+input,select,textarea,button{font:inherit;padding:11px;border-radius:9px}
+input,select{width:100%;border:1px solid #d9cce9;margin:5px 0 12px}
+button{border:0;background:var(--p);color:white;font-weight:bold;cursor:pointer}button:disabled{opacity:.6}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.small{font-size:14px;color:#766887;line-height:1.5}
+.item{border-bottom:1px solid var(--line);padding:12px 0;line-height:1.5}.item:last-child{border:0}
+.tabs{display:flex;gap:8px;margin-bottom:15px}
+@media(max-width:600px){.row{grid-template-columns:1fr}}
+</style></head><body>
+<header>
+    <!-- IDE TUDOD BEILLESZTNI A KÉPEDET: cseréld ki a src="" részben lévő nevet a saját képfájlod nevére (pl. logo.png) -->
+    <img src="kep-neve.png" alt="Elite Swans Logo" class="header-img">
+    
+    <h1>🦢 Elite Swans naptár</h1><p>Programok és elérhetőségek</p>
+</header><main>
+
+<section class="panel"><h2>❤️ Elérhetőség jelzése</h2>
+<p class="small">Írd be a neved, válaszd ki a hetet, majd jelöld be azokat a napokat, amikor ráérsz.</p>
+<label>Neved</label><input id="name" maxlength="100" placeholder="Pl. Anna">
+<div class="tabs"><button id="btnA" type="button">A hét</button><button id="btnB" type="button" style="background:#b8a9d9">B hét</button></div>
+<p id="weekTitle" class="small"><b>Kijelölt hét: A hét</b></p>
+<div class="row" id="daysContainer"></div>
+<button id="submitBtn">Elérhetőség elküldése</button><p id="status" class="small"></p></section>
+
+<section class="panel"><h2>📅 Programok</h2><p class="small">Itt láthatod a vezetők által hozzáadott programokat.</p>
+<div class="tabs"><button id="pBtnA" type="button">A hét</button><button id="pBtnB" type="button" style="background:#b8a9d9">B hét</button></div>
+<div id="programList"></div>
+</section></main>
+
 <script>
-const SUPABASE_URL = "https://cxcexrtuecceeqgigoaf.supabase.co";
-const SUPABASE_KEY = "sb_publishable_Dh4JNnbdvIIn_g4P04oEJA_Hnslu9t1";
-const DAYS = ["Hétfő","Kedd","Szerda","Csütörtök","Péntek","Szombat","Vasárnap"];
-const ready = SUPABASE_URL.startsWith("https://") && !SUPABASE_URL.includes("IDE_MASOLD") && !SUPABASE_KEY.includes("IDE_MASOLD");
-const db = ready ? window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY) : null;
-let week="A", programWeek="A";
+const SUPABASE_URL="https://cxcexrtuecceeqgigoaf.supabase.co";
+const SUPABASE_KEY="sb_publishable_Dh4JNnbdvIIn_g4P04oEJA_Hnslu9t1";
+const DAYS=["Hétfő","Kedd","Szerda","Csütörtök","Péntek","Szombat","Vasárnap"];
+const ready=SUPABASE_URL.startsWith("https://")&&!SUPABASE_URL.includes("IDE_MASOLD")&&!SUPABASE_KEY.includes("IDE_MASOLD");
+const db=ready?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
 const $=id=>document.getElementById(id);
-function setWeek(w){week=w;$("btnA").classList.toggle("active",w==="A");$("btnB").classList.toggle("active",w==="B");renderDays();}
+
+let currentWeek="A";
+let pWeek="A";
+let selectedDays={};
+
+$("btnA").onclick=()=>{currentWeek="A";$("btnA").style.background="#8064b5";$("btnB").style.background="#b8a9d9";$("weekTitle.innerHTML")="<b>Kijelölt hét: A hét</b>";renderDays();};
+$("btnB").onclick=()=>{currentWeek="B";$("btnB").style.background="#8064b5";$("btnA").style.background="#b8a9d9";$("weekTitle.innerHTML")="<b>Kijelölt hét: B hét</b>";renderDays();};
+
+$("pBtnA").onclick=()=>{pWeek="A";$("pBtnA").style.background="#8064b5";$("pBtnB").style.background="#b8a9d9";loadPrograms();};
+$("pBtnB").onclick=()=>{pWeek="B";$("pBtnB").style.background="#8064b5";$("pBtnA").style.background="#b8a9d9";loadPrograms();};
+
 function renderDays(){
- $("days").innerHTML="";
- DAYS.forEach(day=>{const box=document.createElement("div");box.className="day";const label=document.createElement("label");const cb=document.createElement("input");cb.type="checkbox";cb.value=day;const text=document.createElement("span");const strong=document.createElement("strong");strong.textContent=day;text.append(strong);label.append(cb,text);box.append(label);$("days").append(box);});
+  const c=$("daysContainer");c.replaceChildren();
+  DAYS.forEach(d=>{
+    const l=document.createElement("label");l.style.cssText="display:flex;align-items:center;gap:8px;padding:10px;background:#fff5fc;border:1px solid #ffd1f5;border-radius:8px;cursor:pointer;";
+    const cb=document.createElement("input");cb.type="checkbox";cb.style.width="auto";cb.style.margin="0";cb.checked=!!selectedDays[currentWeek]?.[d];
+    cb.onchange=()=>{if(!selectedDays[currentWeek])selectedDays[currentWeek]={};selectedDays[currentWeek][d]=cb.checked;};
+    l.append(cb,document.createTextNode(d));c.append(l);
+  });
 }
-function setProgramWeek(w){programWeek=w;$("progA").classList.toggle("active",w==="A");$("progB").classList.toggle("active",w==="B");loadPrograms();}
-async function loadPrograms(){
- const out=$("programs");out.replaceChildren();
- if(!db){out.textContent="Előbb állítsd be a Supabase URL-t és a publikus kulcsot a kódban.";return;}
- const {data,error}=await db.from("programs").select("week,day,title,time_text,description").eq("week",programWeek);
- if(error){out.textContent="Nem sikerült betölteni a programokat. Ellenőrizd a Supabase-beállításokat.";return;}
- const rows=(data||[]).sort((a,b)=>DAYS.indexOf(a.day)-DAYS.indexOf(b.day));
- if(!rows.length){out.textContent="Erre a hétre még nincs program.";return;}
- rows.forEach(p=>{const card=document.createElement("div");card.className="day";const title=document.createElement("strong");title.textContent=p.day+" — "+p.title;const details=document.createElement("div");details.className="program";details.textContent=[p.time_text,p.description].filter(Boolean).join("\n");card.append(title,details);card.style.marginBottom="10px";out.append(card);});
-}
-$("btnA").onclick=()=>setWeek("A");$("btnB").onclick=()=>setWeek("B");
-$("progA").onclick=()=>setProgramWeek("A");$("progB").onclick=()=>setProgramWeek("B");
-$("send").onclick=async()=>{
- const name=$("name").value.trim();const selected=[...$("days").querySelectorAll("input:checked")].map(x=>x.value);
- const status=$("status");status.textContent="";
- if(!db){status.textContent="Előbb állítsd be a Supabase URL-t és a publikus kulcsot a kódban.";return;}
- if(!name){status.textContent="Kérlek, írd be a neved.";return;}
- if(!selected.length){status.textContent="Jelölj be legalább egy napot.";return;}
- $("send").disabled=true;$("send").textContent="Küldés…";
- const rows=selected.map(day=>({week,day,name}));
- const {error}=await db.from("availability").insert(rows);
- $("send").disabled=false;$("send").textContent="Elérhetőség elküldése";
- if(error){status.textContent="Nem sikerült elküldeni. Próbáld újra, vagy jelezd a weboldal vezetőjének.";return;}
- status.textContent="Köszönjük! Az elérhetőségedet elküldtük a vezetőknek.";
- $("days").querySelectorAll("input").forEach(x=>x.checked=false);
+renderDays();
+
+$("submitBtn").onclick=async()=>{
+  if(!db){$("status").textContent="Állítsd be a Supabase adatokat.";return;}
+  const name=$("name").value.trim();if(!name){$("status").textContent="Add meg a neved.";return;}
+  const daysArr=Object.keys(selectedDays[currentWeek]||{}).filter(k=>selectedDays[currentWeek][k]);
+  if(!daysArr.length){$("status").textContent="Jelölj be legalább egy napot.";return;}
+  $("status").textContent="Mentés…";
+  for(const day of daysArr){
+    await db.from("availability").insert({week:currentWeek,day:day,name:name});
+  }
+  $("status").textContent="Sikeres elküldés!";
 };
-renderDays();loadPrograms();
+
+async function loadPrograms(){
+  if(!db)return;const out=$("programList");out.textContent="Betöltés…";
+  
+  // ITT MÓDOSÍTJUK: A napok és az időpont (time_text) szerinti növekvő sorrendbe rendezés
+  const {data,error}=await db.from("programs").select("*").eq("week",pWeek).order("day").order("time_text", {ascending: true});
+  
+  if(error){out.textContent="Nem sikerült betölteni a programokat.";return;}
+  out.replaceChildren();if(!data.length){out.textContent="Még nincs program erre a hétre.";return;}
+  
+  data.forEach(p=>{
+    const div=document.createElement("div");div.className="item";
+    const strong=document.createElement("strong");strong.textContent=p.day+" — "+p.title;
+    const info=document.createElement("div");info.className="small";info.textContent=[p.time_text,p.description].filter(Boolean).join(" · ");
+    div.append(strong,info);out.append(div);
+  });
+}
+loadPrograms();
 </script></body></html>
